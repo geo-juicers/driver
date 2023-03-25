@@ -58,24 +58,59 @@ pub async fn get_states_acs(api_key: &str, year: &str) -> Result<Vec<State>, Box
     Ok(states)
 }
 
-//#[tokio::main]
-//pub async fn get_gpt(api_key: String) -> Result<Vec<State>, Box<dyn Error>>{
-//    let request_url = format!("DATE_YYYYMM=199003", api_key);
-//    let states = reqwest::get(&request_url)
-//        .await?
-//        .json::<Vec<Vec<String>>>()
-//        .await?[1..].iter()
-//        .map(|x| State{ 
-//            name: x[0].clone(),
-//            pop: Some(Population {
-//                total: Some(x[1].as_str().parse::<u32>().unwrap()),
-//                median_age: Some(x[2].as_str().parse::<f32>().unwrap() as u32),
-//                hisp_pop: None,
-//                non_hisp_pop: None,
-//            }),
-//            econ: None,
-//        })
-//        .collect::<Vec<State>>();
-//    
-//    Ok(states)
-//}
+pub fn get_state_id(state: &str) -> u8 {
+    match state {
+        "Alabama"        => 47,
+        "Alaska"         => 41,
+        "Arizona"        => 31,
+        "Arkansas"       => 33,
+        "California"     => 21,
+        "Colorado"       => 32,
+        "Connecticut"    => 17,
+        "Delaware"       => 28,
+        "Florida"        => 49,
+        "Georgia"        => 48,
+        "Hawaii"         => 44,
+        "Idaho"          => 12,
+        "Illinois"       => 23,
+        "Indiana"        => 26,
+        "Iowa"           => 13,
+        "Kansas"         => 34,
+        "Kentucky"       => 36,
+        "Louisiana"      => 46,
+        "Maine"          => 9,
+        "Maryland"       => 27,
+        "Massachusetts"  => 19,
+        "Michigan"       => 6,
+        "Minnesota"      => 5,
+        "Mississippi"    => 40,
+        "Missouri"       => 35,
+        "Montana"        => 2,
+        "Nebraska"       => 25,
+        "Nevada"         => 22,
+        "New Hampshire"  => 8,
+        "New Jersey"     => 29,
+        "New Mexico"     => 42,
+        "New York"       => 0,
+        "North Carolina" => 38,
+        "North Dakota"   => 4,
+        "Ohio"           => 16,
+        "Oklahoma"       => 43,
+        "Oregon"         => 11,
+        "Pennsylvania"   => 10,
+        "Rhode Island"   => 18,
+        "South Carolina" => 37,
+        "South Dakota"   => 15,
+        "Tennessee"      => 30,
+        "Texas"          => 45,
+        "Utah"           => 24,
+        "Vermont"        => 7,
+        "Virginia"       => 39,
+        "Washington"     => 1,
+        "West Virginia"  => 20,
+        "Wisconsin"      => 3,
+        "Wyoming"        => 14,
+        _ => 0,
+    }
+}
+
