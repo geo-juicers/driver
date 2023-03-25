@@ -58,7 +58,7 @@ pub async fn get_states_acs(api_key: &str, year: &str) -> Result<Vec<State>, Box
     Ok(states)
 }
 
-pub fn get_state_id(state: &str) -> u8 {
+pub fn get_state_id(state: &str) -> usize {
     match state {
         "Alabama"        => 47,
         "Alaska"         => 41,
@@ -110,7 +110,7 @@ pub fn get_state_id(state: &str) -> u8 {
         "West Virginia"  => 20,
         "Wisconsin"      => 3,
         "Wyoming"        => 14,
-        _ => 0,
+        _ => 50,
     }
 }
 
