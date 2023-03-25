@@ -50,7 +50,8 @@ fn handler(request: &Request, dev: &str) -> Response {
                     "median_household_income".to_string(),
                     "median_gross_rent".to_string(),
                     "median_home_value".to_string(),
-                    "poverty".to_string()
+                    "poverty".to_string(),
+                    "joined_union".to_string()
                 ]
             })
         },
@@ -195,6 +196,74 @@ fn handler(request: &Request, dev: &str) -> Response {
                             }
                             data[50] = '\n' as u8;
                             arduino.write(&data).expect("Write failed!");
+                            Response::text(format!("Category: Population, Animation: {} => arduino", animation))
+                        },
+                        "joined_union" => {
+                            // let max = states.iter().fold(0.0f32, |max_val, state| (state.econ.as_ref().unwrap().percentage_poor.unwrap() as f32).max(max_val));
+                            let join_order: Vec<&str> = vec![
+                                "Delaware",
+                                "Pennsylvania",
+                                "New Jersey",
+                                "Georgia",
+                                "Connecticut",
+                                "Massachusetts",
+                                "Maryland",
+                                "South Carolina",
+                                "New Hampshire",
+                                "Virginia",
+                                "New York",
+                                "North Carolina",
+                                "Rhode Island",
+                                "Vermont",
+                                "Kentucky",
+                                "Tennessee",
+                                "Ohio",
+                                "Louisiana",
+                                "Indiana",
+                                "Mississippi",
+                                "Illinois",
+                                "Alabama",
+                                "Maine",
+                                "Missouri",
+                                "Arkansas",
+                                "Michigan",
+                                "Florida",
+                                "Texas",
+                                "Iowa",
+                                "Wisconsin",
+                                "California",
+                                "Minnesota",
+                                "Oregon",
+                                "Kansas",
+                                "West Virginia",
+                                "Nevada",
+                                "Nebraska",
+                                "Colorado",
+                                "North Dakota",
+                                "South Dakota",
+                                "Montana",
+                                "Washington",
+                                "Idaho",
+                                "Wyoming",
+                                "Utah",
+                                "Oklahoma",
+                                "New Mexico",
+                                "Arizona",
+                                "Alaska",
+                                "Hawaii"
+                            ];
+
+                            for state in join_order.iter() {
+                                let brightness: u8 = 5;
+                                assert!(brightness <= 5);
+                                data[get_state_id(state)] = to_char(brightness);
+                                data[50] = '\n' as u8;
+
+                                arduino.write(&data).expect("Write failed!");
+                                thread::sleep(time::Duration::from_secs(1));
+                            }
+                            // data[50] = '\n' as u8;
+                            // arduino.write(&data).expect("Write failed!");
                             Response::text(format!("Category: Population, Animation: {} => arduino", animation))
                         },
                         _ => Response::empty_404()
