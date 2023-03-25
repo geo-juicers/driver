@@ -6,6 +6,9 @@ use std::{thread, time};
 #[derive(Serialize)]
 struct Routes {
     routes: String,
+    grad: Vec<String>,
+    none: Vec<String>,
+    all: Vec<String>,
     pop: Vec<String>,
     econ: Vec<String>
 }
@@ -32,14 +35,15 @@ fn handler(request: &Request, dev: &str) -> Response {
             //default       
             Response::text("OPTIONS")
                 .with_unique_header("Access-Control-Allow-Origin", "*")
-                .with_unique_header("Access-Control-Allow-Method", "*")
-                .with_unique_header("Access-Control-Allow-Headers", "Content-Type")
         },
 
         (GET) (/routes) => {
             // This route returns the list of notes. We perform the query and output it as JSON.
             Response::json(&Routes{
                 routes: "show all routes".to_string(),
+                grad: vec!["Gradient on all LEDs".to_string()],
+                none: vec!["All LEDs off".to_string()],
+                all: vec!["All LEDs on".to_string()],
                 pop: vec![
                     "total".to_string(),
                     "median_age".to_string(),
@@ -54,7 +58,7 @@ fn handler(request: &Request, dev: &str) -> Response {
                     "poverty".to_string(),
                     "joined_union".to_string()
                 ]
-            })
+            }).with_unique_header("Access-Control-Allow-Origin", "*")
         },
         (GET) (/all) => {
             let mut arduino = serialport::new(dev, 9600).open().expect("Failed to open port");
@@ -114,7 +118,7 @@ fn handler(request: &Request, dev: &str) -> Response {
                             }
                             data[50] = '\n' as u8;
                             arduino.write(&data).expect("Write failed!");
-                            Response::text(format!("Category: Population, Animation: {} => arduino", animation))
+                            Response::text(format!("Category: Population, Animation: {} => arduino", animation)).with_unique_header("Access-Control-Allow-Origin", "*")
                         },
                         "median_age" => {
                             let max = states.iter().fold(0.0f32, |max_val, state| (state.pop.as_ref().unwrap().median_age.unwrap() as f32).max(max_val));
@@ -125,7 +129,7 @@ fn handler(request: &Request, dev: &str) -> Response {
                             }
                             data[50] = '\n' as u8;
                             arduino.write(&data).expect("Write failed!");
-                            Response::text(format!("Category: Population, Animation: {} => arduino", animation))
+                            Response::text(format!("Category: Population, Animation: {} => arduino", animation)).with_unique_header("Access-Control-Allow-Origin", "*")
                         },
                         "hispanic" => {
                             let max = states.iter().fold(0.0f32, |max_val, state| (state.pop.as_ref().unwrap().hisp_pop.unwrap() as f32).max(max_val));
@@ -136,7 +140,7 @@ fn handler(request: &Request, dev: &str) -> Response {
                             }
                             data[50] = '\n' as u8;
                             arduino.write(&data).expect("Write failed!");
-                            Response::text(format!("Category: Population, Animation: {} => arduino", animation))
+                            Response::text(format!("Category: Population, Animation: {} => arduino", animation)).with_unique_header("Access-Control-Allow-Origin", "*")
                         },
                         "hispanic_per_capita" => {
                             let max = states.iter().fold(0.0f32, 
@@ -149,7 +153,7 @@ fn handler(request: &Request, dev: &str) -> Response {
                             }
                             data[50] = '\n' as u8;
                             arduino.write(&data).expect("Write failed!");
-                            Response::text(format!("Category: Population, Animation: {} => arduino", animation))
+                            Response::text(format!("Category: Population, Animation: {} => arduino", animation)).with_unique_header("Access-Control-Allow-Origin", "*")
                         },
                         _ => Response::empty_404()
                     }
@@ -165,7 +169,7 @@ fn handler(request: &Request, dev: &str) -> Response {
                             }
                             data[50] = '\n' as u8;
                             arduino.write(&data).expect("Write failed!");
-                            Response::text(format!("Category: Economic, Animation: {} => arduino", animation))
+                            Response::text(format!("Category: Economic, Animation: {} => arduino", animation)).with_unique_header("Access-Control-Allow-Origin", "*")
                         },
                         "income_hist" => {
                             for year in vec!["2009", "2010", "2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021"] {
@@ -180,7 +184,7 @@ fn handler(request: &Request, dev: &str) -> Response {
                                 arduino.write(&data).expect("Write failed!");
                                 thread::sleep(time::Duration::from_millis(500));
                             }
-                            Response::text(format!("Category: Population, Animation: {} => arduino", animation))
+                            Response::text(format!("Category: Population, Animation: {} => arduino", animation)).with_unique_header("Access-Control-Allow-Origin", "*")
                         },
                         "median_gross_rent" => {
                             let max = states.iter().fold(0.0f32, |max_val, state| (state.econ.as_ref().unwrap().median_gross_rent.unwrap() as f32).max(max_val));
@@ -191,7 +195,7 @@ fn handler(request: &Request, dev: &str) -> Response {
                             }
                             data[50] = '\n' as u8;
                             arduino.write(&data).expect("Write failed!");
-                            Response::text(format!("Category: Economic, Animation: {} => arduino", animation))
+                            Response::text(format!("Category: Economic, Animation: {} => arduino", animation)).with_unique_header("Access-Control-Allow-Origin", "*")
                         },
                         "median_home_value" => {
                             let max = states.iter().fold(0.0f32, |max_val, state| (state.econ.as_ref().unwrap().median_home_value.unwrap() as f32).max(max_val));
@@ -202,7 +206,7 @@ fn handler(request: &Request, dev: &str) -> Response {
                             }
                             data[50] = '\n' as u8;
                             arduino.write(&data).expect("Write failed!");
-                            Response::text(format!("Category: Economic, Animation: {} => arduino", animation))
+                            Response::text(format!("Category: Economic, Animation: {} => arduino", animation)).with_unique_header("Access-Control-Allow-Origin", "*")
                         },
                         "poverty" => {
                             let max = states.iter().fold(0.0f32, |max_val, state| (state.econ.as_ref().unwrap().percentage_poor.unwrap() as f32).max(max_val));
@@ -213,7 +217,7 @@ fn handler(request: &Request, dev: &str) -> Response {
                             }
                             data[50] = '\n' as u8;
                             arduino.write(&data).expect("Write failed!");
-                            Response::text(format!("Category: Economic, Animation: {} => arduino", animation))
+                            Response::text(format!("Category: Economic, Animation: {} => arduino", animation)).with_unique_header("Access-Control-Allow-Origin", "*")
                         },
                         "joined_union" => {
                             let join_order: Vec<&str> = vec![
@@ -278,7 +282,7 @@ fn handler(request: &Request, dev: &str) -> Response {
                                 arduino.write(&data).expect("Write failed!");
                                 thread::sleep(time::Duration::from_millis(500));
                             }
-                            Response::text(format!("Category: Economic, Animation: {} => arduino", animation))
+                            Response::text(format!("Category: Economic, Animation: {} => arduino", animation)).with_unique_header("Access-Control-Allow-Origin", "*")
                         },
                         _ => Response::empty_404()
                     }
