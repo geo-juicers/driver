@@ -42,12 +42,13 @@ fn handler(request: &Request, dev: &str) -> Response {
                 routes: "show all routes".to_string(),
                 pop: vec![
                     "total".to_string(),
-                    "total_hist".to_string(),
                     "median_age".to_string(),
-                    "hispanic".to_string()
+                    "hispanic".to_string(),
+                    "hispanic_per_capita".to_string()
                 ],
                 econ: vec![
                     "median_household_income".to_string(),
+                    "income_hist".to_string(),
                     "median_gross_rent".to_string(),
                     "median_home_value".to_string(),
                     "poverty".to_string(),
@@ -60,7 +61,7 @@ fn handler(request: &Request, dev: &str) -> Response {
             thread::sleep(time::Duration::from_secs(1));
             let mut data: [u8; 51] = [0; 51];
             for n in 0..50 {
-                data[n] = 53
+                data[n] = 52
             }
             data[50] = '\n' as u8;
             arduino.write(&data).expect("Write failed!");
@@ -77,36 +78,37 @@ fn handler(request: &Request, dev: &str) -> Response {
             arduino.write(&data).expect("Write failed!");
             Response::text("Turned all LEDs to 0")
         },
+        (GET) (/grad) => {
+            let mut arduino = serialport::new(dev, 9600).open().expect("Failed to open port");
+            thread::sleep(time::Duration::from_secs(1));
+            for l in 0..10 {
+                for n in 0..6 {
+                    let mut data: [u8; 51] = [to_char(n); 51];
+                    data[50] = '\n' as u8;
+                    arduino.write(&data).expect("Write failed!");
+                    thread::sleep(time::Duration::from_millis(500));
+                }
+            }
+            Response::text("Running Gradiant on LEDs")
+        },
         (GET) (/{category: String}/{animation: String}) => {
             let api_key:String = dotenv::var("API_KEY").unwrap();
             let mut arduino = serialport::new(dev, 9600).open().expect("Failed to open port");
-            thread::sleep(time::Duration::from_secs(1));
+            thread::sleep(time::Duration::from_millis(500));
             let mut states: Vec::<State> = get_states_acs(&api_key, "2021").unwrap();
             //remove DC and Puerto Rico
             states.retain(|state| state.name != "District of Columbia" && state.name != "Puerto Rico");
-            let mut data: [u8; 51] = [0; 51];
+            let mut data: [u8; 51] = [48; 51];
             match category.as_str() {
                 "pop" => {
                     match animation.as_str() {
                         "total" => {
-                            println!("getting total!");
                             let max = states.iter().fold(0.0f32, |max_val, state| (state.pop.as_ref().unwrap().total.unwrap() as f32).max(max_val));
                             for state in states.iter() {
                                 let mut brightness = ((state.pop.as_ref().unwrap().total.unwrap() as f32/max) * 5.0) as u8;
                                 if brightness < 5 {
                                     brightness += 1
                                 }
-                                assert!(brightness <= 5);
-                                data[get_state_id(&state.name)] = to_char(brightness);
-                            }
-                            data[50] = '\n' as u8;
-                            arduino.write(&data).expect("Write failed!");
-                            Response::text(format!("Category: Population, Animation: {} => arduino", animation))
-                        },
-                        "total_hist" => {
-                            let max = states.iter().fold(0.0f32, |max_val, state| (state.pop.as_ref().unwrap().total.unwrap() as f32).max(max_val));
-                            for state in states.iter() {
-                                let brightness = ((state.pop.as_ref().unwrap().total.unwrap() as f32/max) * 5.0) as u8;
                                 assert!(brightness <= 5);
                                 data[get_state_id(&state.name)] = to_char(brightness);
                             }
@@ -163,6 +165,21 @@ fn handler(request: &Request, dev: &str) -> Response {
                             }
                             data[50] = '\n' as u8;
                             arduino.write(&data).expect("Write failed!");
+                            Response::text(format!("Category: Economic, Animation: {} => arduino", animation))
+                        },
+                        "income_hist" => {
+                            for year in vec!["2009", "2010", "2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021"] {
+                                let s = get_states_acs(&api_key, year).unwrap();
+                                let max = s.iter().fold(0.0f32, |max_val, state| (state.econ.as_ref().unwrap().median_household_income.unwrap() as f32).max(max_val));
+                                for state in s.iter() {
+                                    let brightness = ((state.econ.as_ref().unwrap().median_household_income.unwrap() as f32/max) * 5.0) as u8;
+                                    assert!(brightness <= 5);
+                                    data[get_state_id(&state.name)] = to_char(brightness);
+                                }
+                                data[50] = '\n' as u8;
+                                arduino.write(&data).expect("Write failed!");
+                                thread::sleep(time::Duration::from_millis(500));
+                            }
                             Response::text(format!("Category: Population, Animation: {} => arduino", animation))
                         },
                         "median_gross_rent" => {
@@ -174,7 +191,7 @@ fn handler(request: &Request, dev: &str) -> Response {
                             }
                             data[50] = '\n' as u8;
                             arduino.write(&data).expect("Write failed!");
-                            Response::text(format!("Category: Population, Animation: {} => arduino", animation))
+                            Response::text(format!("Category: Economic, Animation: {} => arduino", animation))
                         },
                         "median_home_value" => {
                             let max = states.iter().fold(0.0f32, |max_val, state| (state.econ.as_ref().unwrap().median_home_value.unwrap() as f32).max(max_val));
@@ -185,7 +202,7 @@ fn handler(request: &Request, dev: &str) -> Response {
                             }
                             data[50] = '\n' as u8;
                             arduino.write(&data).expect("Write failed!");
-                            Response::text(format!("Category: Population, Animation: {} => arduino", animation))
+                            Response::text(format!("Category: Economic, Animation: {} => arduino", animation))
                         },
                         "poverty" => {
                             let max = states.iter().fold(0.0f32, |max_val, state| (state.econ.as_ref().unwrap().percentage_poor.unwrap() as f32).max(max_val));
@@ -196,10 +213,9 @@ fn handler(request: &Request, dev: &str) -> Response {
                             }
                             data[50] = '\n' as u8;
                             arduino.write(&data).expect("Write failed!");
-                            Response::text(format!("Category: Population, Animation: {} => arduino", animation))
+                            Response::text(format!("Category: Economic, Animation: {} => arduino", animation))
                         },
                         "joined_union" => {
-                            // let max = states.iter().fold(0.0f32, |max_val, state| (state.econ.as_ref().unwrap().percentage_poor.unwrap() as f32).max(max_val));
                             let join_order: Vec<&str> = vec![
                                 "Delaware",
                                 "Pennsylvania",
@@ -254,17 +270,15 @@ fn handler(request: &Request, dev: &str) -> Response {
                             ];
 
                             for state in join_order.iter() {
-                                let brightness: u8 = 5;
+                                let brightness: u8 = 4;
                                 assert!(brightness <= 5);
                                 data[get_state_id(state)] = to_char(brightness);
                                 data[50] = '\n' as u8;
 
                                 arduino.write(&data).expect("Write failed!");
-                                thread::sleep(time::Duration::from_secs(1));
+                                thread::sleep(time::Duration::from_millis(500));
                             }
-                            // data[50] = '\n' as u8;
-                            // arduino.write(&data).expect("Write failed!");
-                            Response::text(format!("Category: Population, Animation: {} => arduino", animation))
+                            Response::text(format!("Category: Economic, Animation: {} => arduino", animation))
                         },
                         _ => Response::empty_404()
                     }
