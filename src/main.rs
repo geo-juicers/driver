@@ -57,6 +57,10 @@ fn get_state(state: &str) -> u8 {
 }
 
 fn main() {
+    let ports = serialport::available_ports().expect("No ports found!");
+    for p in ports {
+        println!("{}", p.port_name);
+    }
     let api_key:String = dotenv::var("API_KEY").unwrap();
     let states: Vec::<api::State> = api::get_states_acs(&api_key, "2021").unwrap();
     println!("{:#?}", states);
